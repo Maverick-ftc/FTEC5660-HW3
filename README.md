@@ -260,5 +260,3 @@ There are two distinctions in this design that matter to the interpretation of i
 > The public-test run produced the following output: Processed 20 companies. Wrote results.csv. Your points: 4, 7, 11. Point accuracy: 60/60 (balanced: 100.0%).
 
 All 60 verdicts agreed with the public answers. There were therefore no disagreement cases to explain for this configuration. Both the true-PASS and true-FAIL cases were identified correctly, producing a balanced point accuracy of 100.0%.
-
-This result supports the selected rules on the public dataset. It does not establish how consistently the model will interpret unfamiliar wording. The main remaining checks are performance on unseen companies and consistency across repeated runs. I have not reported private-test results or repeated-run statistics because those are not available.
