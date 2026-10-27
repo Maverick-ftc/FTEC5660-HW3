@@ -171,14 +171,14 @@ companies with the same tools and the same answer key rules, but different
 names and wording, and scores your 3 points only.
 
 ## Homework 3 solution:
-> to students: For this implementation, my starting question was who would actually be able to answer each of Fisher’s questions. A customer can describe the help received from a sales team, an employee can describe working conditions, and a competitor can identify capabilities that are difficult to match. This led me to Points 4, 7 and 11.
+> to students:
+
+For this implementation, my starting question was who would actually be able to answer each of Fisher’s questions. A customer can describe the help received from a sales team, an employee can describe working conditions, and a competitor can identify capabilities that are difficult to match. This led me to Points 4, 7 and 11.
 
 I also tried the combination of Points 3, 7 and 14, which produced lower public-test accuracy. I retained the original combination because its evidence sources and decision rules were more straightforward to check. I would need to examine the individual mismatches before attributing the lower score to a particular rule or model behaviour.
 
 ### My 3 points and rules
-> for each point: 
-
-Point 4: Above-average sales organisation
+> Point 4: Above-average sales organisation
 
 I chose this point to distinguish having salespeople from having a sales organisation that adds value for customers. Sending a quotation is useful, but it says relatively little about whether the team understands the customer’s problem.
 
@@ -186,7 +186,7 @@ My rule is PASS when a knowledgeable interviewee describes useful advice, an und
 
 The agent interviews a customer about sales_team. A competitor is the alternative source.
 
-Point 7: Labour and personnel relations
+> Point 7: Labour and personnel relations
 
 This point gives employees a place in the assessment. Their account can reveal whether the company’s treatment of staff supports the positive picture management might present.
 
@@ -194,7 +194,7 @@ My rule is PASS when the interview supports strong personnel relations through f
 
 The primary source is a current_employee answering questions about working_conditions. A former_employee is available if further evidence is needed.
 
-Point 11: Advantage over competitors
+> Point 11: Advantage over competitors
 
 I chose this point because satisfactory current performance does not explain why customers should continue buying from the company. I wanted the assessment to identify a specific reason for preferring its business over an alternative.
 
@@ -258,6 +258,7 @@ The workflow separates evidence collection from judgment. The interview roles an
 There are two distinctions in this design that matter to the interpretation of its output. First, finding a quote in an interview verifies its source, but does not prove that the model interpreted it correctly. Second, the code uses a labelled FAIL fallback when it cannot obtain a validated assessment. That fallback preserves a complete output structure, but should be read as a processing failure rather than evidence that the company performs badly.
 ### Results
 > The public-test run produced the following output: Processed 20 companies. Wrote results.csv. Your points: 4, 7, 11. Point accuracy: 60/60 (balanced: 100.0%).
+
 All 60 verdicts agreed with the public answers. There were therefore no disagreement cases to explain for this configuration. Both the true-PASS and true-FAIL cases were identified correctly, producing a balanced point accuracy of 100.0%.
 
 This result supports the selected rules on the public dataset. It does not establish how consistently the model will interpret unfamiliar wording. The main remaining checks are performance on unseen companies and consistency across repeated runs. I have not reported private-test results or repeated-run statistics because those are not available.
