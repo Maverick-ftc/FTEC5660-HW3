@@ -171,52 +171,93 @@ companies with the same tools and the same answer key rules, but different
 names and wording, and scores your 3 points only.
 
 ## Homework 3 solution:
-> to students: I selected Points 4, 7 and 11: sales organisation, labour and personnel relations, and competitive advantage. Together, they cover how a company reaches customers, treats its employees and competes in its market. These points also fit Fisher’s scuttlebutt approach, since customers, employees and competitors can describe parts of a business that are difficult to judge from management’s statements alone.
+> to students: For this implementation, my starting question was who would actually be able to answer each of Fisher’s questions. A customer can describe the help received from a sales team, an employee can describe working conditions, and a competitor can identify capabilities that are difficult to match. This led me to Points 4, 7 and 11.
+
+I also tried the combination of Points 3, 7 and 14, which produced lower public-test accuracy. I retained the original combination because its evidence sources and decision rules were more straightforward to check. I would need to examine the individual mismatches before attributing the lower score to a particular rule or model behaviour.
 
 ### My 3 points and rules
-> for each point: Point 4: Above-average sales organisation
+> for each point: 
 
-I chose this point because a good product still needs a sales team that understands customers and helps them make decisions. My rule is PASS when a knowledgeable interviewee describes useful advice, an understanding of customer needs or effective sales support. It is FAIL when the team mainly sends price lists, cannot advise customers, or loses customers to rivals with better sales support.
+Point 4: Above-average sales organisation
 
-The primary evidence comes from interviewing a customer about sales_team. A competitor is the alternative source if additional evidence is needed.
+I chose this point to distinguish having salespeople from having a sales organisation that adds value for customers. Sending a quotation is useful, but it says relatively little about whether the team understands the customer’s problem.
+
+My rule is PASS when a knowledgeable interviewee describes useful advice, an understanding of customer needs or effective sales support. It is FAIL when the evidence describes a mainly price-list-based service, poor advice, or customers turning to rivals for better support.
+
+The agent interviews a customer about sales_team. A competitor is the alternative source.
 
 Point 7: Labour and personnel relations
 
-I chose this point because employees’ accounts can show whether the company’s stated concern for its people is reflected in everyday work. My rule is PASS when the interview describes strong personnel relations through fair treatment, good working conditions, constructive communication or employee trust. It is FAIL when the account describes persistent poor treatment, unsafe conditions, serious dissatisfaction or hostile labour relations.
+This point gives employees a place in the assessment. Their account can reveal whether the company’s treatment of staff supports the positive picture management might present.
 
-I interview a current employee about working_conditions, with a former employee as the alternative source.
+My rule is PASS when the interview supports strong personnel relations through fair treatment, good working conditions, constructive communication or employee trust. It is FAIL when the account describes persistent poor treatment, unsafe conditions, serious dissatisfaction or hostile labour relations.
+
+The primary source is a current_employee answering questions about working_conditions. A former_employee is available if further evidence is needed.
 
 Point 11: Advantage over competitors
 
-I chose this point to examine why customers would continue choosing the company when alternatives are available. My rule is PASS when the interview identifies a specific, meaningful competitive advantage, such as specialist expertise, differentiated products, customer loyalty or switching costs. It is FAIL when the business is easily interchangeable with rivals or customers choose mainly on price without another meaningful advantage.
+I chose this point because satisfactory current performance does not explain why customers should continue buying from the company. I wanted the assessment to identify a specific reason for preferring its business over an alternative.
 
-I interview a competitor about competitive_edge, with a customer as the alternative source.
+My rule is PASS when the interview identifies a meaningful competitive advantage, such as specialist expertise, differentiated products, customer loyalty or switching costs. It is FAIL when the offering is easily interchangeable with rivals or customers choose mainly on price without another meaningful advantage.
+
+The agent interviews a competitor about competitive_edge, with a customer as the alternative source.
 ### Design
+```mermaid
 flowchart TD
-    A[Company tools] --> B[Fixed interview plan]
-    B --> C[Point 4: customer / sales_team]
-    B --> D[Point 7: current_employee / working_conditions]
-    B --> E[Point 11: competitor / competitive_edge]
+    A["Initialize ChatDeepSeek once<br/>deepseek-v4-flash"] --> B["Start a company workflow<br/>Up to 4 companies concurrently"]
+    B --> C["Apply the fixed interview plan"]
 
-    C --> F[DeepSeek evaluates the three points]
-    D --> F
-    E --> F
+    subgraph Interviews["Retrieve evidence through the interview tool"]
+        D["Point 4: Sales organisation<br/>customer / sales_team"]
+        E["Point 7: Personnel relations<br/>current_employee / working_conditions"]
+        F["Point 11: Competitive advantage<br/>competitor / competitive_edge"]
+    end
 
-    F --> G{Valid verdicts and exact quotes?}
-    G -->|Yes| H[Keep validated assessments]
-    G -->|Repair needed| I[Retry unresolved points within the call limit]
-    I --> F
-    I -->|Evidence insufficient| J[Interview the alternative person]
-    J --> F
+    C --> D
+    C --> E
+    C --> F
 
-    G -->|Attempts exhausted| K[Keep valid points and flag remaining fallbacks]
-    H --> L[Return verdicts and summary]
-    K --> L
-    L --> M[Provided runner writes results.csv]
+    D --> G["Collect usable interview answers<br/>Use an alternative person if unavailable"]
+    E --> G
+    F --> G
 
-    The agent uses LangChain’s ChatDeepSeek integration with the required model name, deepseek-v4-flash. The model is initialised once, while each company’s evidence is collected and stored separately. A fixed plan routes each point to its interview topic and a knowledgeable person. One substantive answer is normally sufficient because the assignment states that knowledgeable interviewees agree. If the first answer is unavailable, the agent tries the alternative person; it can also consult that person when the model identifies insufficient evidence. The model receives the rules and retrieved interviews, then returns a verdict, a short explanation and an exact supporting quote for each point. Python checks the output format and verifies that each quote appears in the retrieved evidence. Valid assessments are retained while unresolved points receive up to two further model attempts. The workflow allows at most six interview calls per company and processes up to four companies concurrently, with a separate 180-second analysis limit for each company. If processing fails, completed assessments are preserved and remaining FAIL values are explicitly labelled as fallbacks in the summary.
+    G --> H["Evaluate evidence against the rules<br/>Return verdict, reason and exact quote"]
+    H --> I{"Valid label and<br/>quote found in the source?"}
+
+    I -->|Yes| J["Keep the validated assessment"]
+    I -->|No| K{"Model attempts remaining?<br/>Maximum 3 calls per company"}
+
+    K -->|Yes| L["Repair unresolved points only"]
+    L -->|Format or quote issue| H
+    L -->|More evidence requested| M["Consult the alternative knowledgeable person<br/>Only if not already interviewed"]
+    M --> H
+
+    K -->|No| N["Keep completed assessments<br/>Mark unresolved points as FAIL fallbacks"]
+
+    J --> O["After processing finishes:<br/>assemble three verdicts and supporting summary"]
+    N --> O
+    O --> P["Provided runner writes results.csv"]
+
+    classDef setup fill:#E2E8F0,stroke:#64748B,color:#0F172A;
+    classDef evidence fill:#DBEAFE,stroke:#3B82F6,color:#1E3A8A;
+    classDef model fill:#EDE9FE,stroke:#8B5CF6,color:#4C1D95;
+    classDef repair fill:#FEF3C7,stroke:#F59E0B,color:#78350F;
+    classDef output fill:#D1FAE5,stroke:#10B981,color:#064E3B;
+    classDef fallback fill:#FEE2E2,stroke:#EF4444,color:#7F1D1D;
+
+    class A,B,C setup;
+    class D,E,F,G,M evidence;
+    class H,I model;
+    class K,L repair;
+    class J,O,P output;
+    class N fallback;
+```
+
+The workflow separates evidence collection from judgment. The interview roles and topics are fixed before the model sees a company’s evidence. This avoids spending the interview budget on people who cannot answer the selected questions. The agent normally obtains three interviews, one per point; an alternative knowledgeable person is consulted when the first answer is unavailable or the model identifies insufficient evidence. LangChain’s ChatDeepSeek, using deepseek-v4-flash, then evaluates the retrieved material against the written rules. Each response must contain a verdict, an explanation and an exact supporting quote. Python checks the response structure, the allowed labels and whether the quote occurs in the interview. Accepted assessments are kept while unresolved points receive up to two further model attempts. Each company can use at most six interviews and has a 180-second analysis limit. Up to four companies are processed concurrently, with separate evidence for each. The provided runner receives the completed results and writes results.csv.
+
+There are two distinctions in this design that matter to the interpretation of its output. First, finding a quote in an interview verifies its source, but does not prove that the model interpreted it correctly. Second, the code uses a labelled FAIL fallback when it cannot obtain a validated assessment. That fallback preserves a complete output structure, but should be read as a processing failure rather than evidence that the company performs badly.
 ### Results
 > The public-test run produced the following output: Processed 20 companies. Wrote results.csv. Your points: 4, 7, 11. Point accuracy: 60/60 (balanced: 100.0%).
-There were no disagreements with the public answers for any of the three points across the 20 companies. Both the PASS and FAIL cases were classified correctly, giving a balanced point accuracy of 100.0%. The run also generated results.csv. Since there were no mismatches, there are no individual disagreement cases to explain.
+All 60 verdicts agreed with the public answers. There were therefore no disagreement cases to explain for this configuration. Both the true-PASS and true-FAIL cases were identified correctly, producing a balanced point accuracy of 100.0%.
 
-This result shows that the selected rules matched the public answer key in this run. Performance on the private companies and consistency across repeated runs remain untested. Different wording could still affect the model’s interpretation, even when the underlying evidence supports the same conclusion.
+This result supports the selected rules on the public dataset. It does not establish how consistently the model will interpret unfamiliar wording. The main remaining checks are performance on unseen companies and consistency across repeated runs. I have not reported private-test results or repeated-run statistics because those are not available.
