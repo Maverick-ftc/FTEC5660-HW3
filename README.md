@@ -192,7 +192,7 @@ I chose this point to examine why customers would continue choosing the company 
 
 I interview a competitor about competitive_edge, with a customer as the alternative source.
 ### Design
-> flowchart TD
+flowchart TD
     A[Company tools] --> B[Fixed interview plan]
     B --> C[Point 4: customer / sales_team]
     B --> D[Point 7: current_employee / working_conditions]
