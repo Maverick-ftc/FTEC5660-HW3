@@ -175,8 +175,6 @@ names and wording, and scores your 3 points only.
 
 For this implementation, my starting question was who would actually be able to answer each of Fisher’s questions. A customer can describe the help received from a sales team, an employee can describe working conditions, and a competitor can identify capabilities that are difficult to match. This led me to Points 4, 7 and 11.
 
-I also tried the combination of Points 3, 7 and 14, which produced lower public-test accuracy. I retained the original combination because its evidence sources and decision rules were more straightforward to check. I would need to examine the individual mismatches before attributing the lower score to a particular rule or model behaviour.
-
 ### My 3 points and rules
 > Point 4: Above-average sales organisation
 
